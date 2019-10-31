@@ -20,8 +20,9 @@
 
 int x_0, y_0, x_1,y_1,x_2,y_2;
 
-int shape = 4;
+int shape = 0;
 bool preenchido = false;
+bool trans = false;
 
 //variáveis usadas para calcular primeiro octante
 bool declive = false, simetrico = false;
@@ -131,7 +132,8 @@ void criaMenu();
 // Funcao que percorre a lista de pontos desenhando-os na tela
 void drawPontos();
 
-
+//Funcao que realizao translacao
+void translacao(int tx, int ty);
 
 // Funcao Principal do C
 int main(int argc, char** argv){
@@ -170,7 +172,7 @@ void reshape(int w, int h)
     glOrtho (0, w, 0, h, -1 ,1);  
 
    // muda para o modo GL_MODELVIEW (n�o pretendemos alterar a projec��o
-   // quando estivermos a desenhar na tela)
+   // quando estivermos a desenhar na tela)d
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 }
@@ -181,8 +183,37 @@ void keyboard(unsigned char key, int x, int y){
         case 27: // codigo ASCII da tecla ESC
             while(popPonto() != NULL);
             exit(0); // comando pra finalizacao do programa
-        break;
+        case 'w':
+        	if(trans){
+        		printf("mover para cima\n");
+	        	translacao(0,1);
+			}
+			glutPostRedisplay();
+        	break;
+        case 's':
+        	if(trans){
+        		printf("mover para baixo\n");
+	        	translacao(0,-1);
+			}
+			glutPostRedisplay();
+        	break;
+		case 'a':
+			if(trans){
+				printf("mover para esquerda\n");
+	        	translacao(-1,0);
+			}
+			glutPostRedisplay();
+        	break;        
+        case 'd':
+        	if(trans){
+        		printf("mover para direita\n");
+	        	translacao(1,0);
+			}			
+        	break;
+        default:
+        	break;
     }
+    glutPostRedisplay();
 }
 
 //Funcao usada na funcao callback para a utilizacao do mouse
@@ -243,10 +274,8 @@ void mouse(int button, int state, int x, int y)
                     glutPostRedisplay();
                 }
                 break;
-            
             default:
-                break;
-            }
+            	break;
          }
          break;
 /*
@@ -266,6 +295,7 @@ void mouse(int button, int state, int x, int y)
 */
       default:
          break;
+   	   	   }
    }
 }
 
@@ -274,6 +304,7 @@ void mouse_m(int x, int y){
 
 // Funcao usada na funcao callback para desenhar na tela
 void display(void){
+	printf("shape = %d\n",shape);
     glClear(GL_COLOR_BUFFER_BIT); //Limpa o Buffer de Cores
     glColor3f (0.0, 0.0, 0.0); // Seleciona a cor default como preto
     int i;
@@ -352,7 +383,11 @@ void display(void){
                     }
                 }
                 break;
-            
+            case 5:
+            	if(trans)
+	            	printf("Desenhar os pontos depois de transladados\n");
+	            	drawPontos();
+            	break;
             default:
                 break;
             }
@@ -363,13 +398,17 @@ void display(void){
 
 //Funcao que desenha os pontos contidos em uma lista de pontos
 void drawPontos(){
+	int count = 0;
     ponto * pnt;
     pnt = pontos;
     glBegin(GL_POINTS); // Seleciona a primitiva GL_POINTS para desenhar
         while(pnt != NULL){
+        	//printf("Plotando ponto em x = %d, y = %d\n",pnt->x,pnt->y);
             glVertex2i(pnt->x,pnt->y);
             pnt = pnt->prox;
+            count ++;
         }
+        printf( "A pilha esvaziou, %d pontos desenhados\n",count);
     glEnd();  // indica o fim do desenho
 }
 
@@ -505,13 +544,18 @@ void circunferencia(int cx, int cy, int raio){
 
 }
 //Pontos, unidades em x e y
-void translacao(ponto * pontos, int tx, int ty){
-    ponto * aux = pontos;//Interpreta os pontos
-    while(aux != NULL){
-        aux->x = aux->x + tx;
-        aux->y = aux->y + ty;
-        aux = pontos->prox;
-    }
+void translacao(int tx, int ty){
+	ponto * pnt;
+	pnt = new ponto;
+	pnt = pontos;
+	
+	while(pontos != NULL){
+		pontos->x+=tx;
+		pontos->y+=ty;
+		pontos = pontos->prox;
+	}
+	
+	pontos = pnt;
 }
 
 void escala(ponto * pontos , double sx, double sy){
@@ -554,10 +598,12 @@ void menuQuad(int op){
     {
     case 0:
         shape = 1;
+        printf("shape = 1\n");
         preenchido = false;
         break;
     case 1:
         shape = 1;
+        printf("shape = 1\n");
         preenchido = true;
         break;
     
@@ -571,10 +617,12 @@ void menuTri(int op){
     {
     case 0:
         shape = 2;
+        printf("shape = 2\n");
         preenchido = false;
         break;
     case 1:
         shape = 2;
+        printf("shape = 2\n");
         preenchido = true;
         break;
     
@@ -588,10 +636,12 @@ void menuPoli(int op){
     {
     case 0:
         shape = 3;
+        printf("shape = 3\n");
         preenchido = false;
         break;
     case 1:
         shape = 3;
+        printf("shape = 3\n");
         preenchido = true;
         break;
     
@@ -605,10 +655,12 @@ void menuCir(int op){
     {
     case 0:
         shape = 4;
+        printf("shape = 4\n");
         preenchido = false;
         break;
     case 1:
         shape = 4;
+        printf("shape = 4\n");
         preenchido = true;
         break;
     
@@ -622,6 +674,13 @@ void menuTrans(int op){
     {
     case 0:
         //translacao
+        printf("Translacao selecionada\n");
+        if(trans)
+        	trans = false;
+        else
+        	trans = true;
+        shape = 5;
+        printf("shape = 5\n");
         break;
     case 1:
         /* escala */
@@ -639,12 +698,13 @@ void menuTrans(int op){
         break;
     }
 }
-
+//Reta
 void menuPrincipal(int op){
     switch (op)
     {
     case 0:
         shape = 0;
+        printf("shape = 0\n");
         break;
     
     default:
